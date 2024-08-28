@@ -17,6 +17,10 @@ router.post("/", async (req, res) => {
         }
     try {
         const { korisnik_id, knjiga_id, dodatna_oprema_id } = req.body;
+        if(!Number.isInteger(korisnik_id) || !Number.isInteger(knjiga_id) || !Number.isInteger(dodatna_oprema_id)) {
+            res.status(500).json({ error: "Greska", data: err });
+
+        }
         const narudzbina = await Narudzbina.create({ korisnik_id, knjiga_id, dodatna_oprema_id });
         return res.status(201).json(narudzbina);
     } catch (err) {
@@ -68,6 +72,10 @@ router.put("/:id", async (req, res) => {
         }
     try {
         const { korisnik_id, knjiga_id, dodatna_oprema_id } = req.body;
+        if(!Number.isInteger(korisnik_id) || !Number.isInteger(knjiga_id) || !Number.isInteger(dodatna_oprema_id)) {
+            res.status(500).json({ error: "Greska", data: err });
+
+        }
         const [updated] = await Narudzbina.update(
             { korisnik_id, knjiga_id, dodatna_oprema_id },
             { where: { id: req.params.id } }
