@@ -6,6 +6,10 @@ router.use(express.json());
 router.use(express.urlencoded({ extended: true }));
 const jwtSecret = 'a3c16e3b29a7e8c3d2f8b1c6f5d5c2a3e4a6d3b7e3b5c9f3b1e8c4f5a3b6d9f1';
 
+function isValidEmail(email) {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return emailRegex.test(email);
+}
 // Create a new Korisnik
 router.post("/", async (req, res) => {
     const authHeader = req.headers.authorization;
@@ -20,6 +24,10 @@ router.post("/", async (req, res) => {
         }
     try {
         const { ime, email, password, uloga } = req.body;
+        if(ime.length<3 || !isValidEmail(email) || password.length<3 || uloga==null) {
+            res.status(500).json({ error: "Greska", data: err });
+
+        }
         const korisnik1 = await Korisnik.findOne({ where: { email } });
         console.log(korisnik1);
         if (korisnik1 !== null) {
@@ -98,6 +106,10 @@ router.put("/:id", async (req, res) => {
         }
     try {
         const { ime, email, password, uloga } = req.body;
+        if(ime.length<3 || !isValidEmail(email) || password.length<3 || uloga==null) {
+            res.status(500).json({ error: "Greska", data: err });
+
+        }
         const [updated] = await Korisnik.update(
             { ime, email, password, uloga },
             { where: { id: req.params.id } }
