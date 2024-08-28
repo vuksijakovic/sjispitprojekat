@@ -17,6 +17,9 @@ router.post("/", async (req, res) => {
         }
     try {
         const { naziv } = req.body;
+        if(naziv.length < 3) {
+            return res.status(500).json({ error: "Greska", data: err });
+        }
         const dodatna_oprema = await Dodatna_oprema.create({ naziv });
         return res.status(201).json(dodatna_oprema);
     } catch (err) {
@@ -64,6 +67,9 @@ router.put("/:id", async (req, res) => {
         }
     try {
         const { naziv } = req.body;
+        if(naziv.length < 3) {
+            return res.status(500).json({ error: "Greska", data: err });
+        }
         const [updated] = await Dodatna_oprema.update({ naziv }, {
             where: { id: req.params.id }
         });
