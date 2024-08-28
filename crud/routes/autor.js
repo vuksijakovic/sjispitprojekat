@@ -17,6 +17,9 @@ router.post("/", async (req, res) => {
         }
      try {
          const { naziv } = req.body;
+         if(naziv.length < 3) {
+            return res.status(500).json({ error: "Greska", data: err });
+        }
          const autor = await Autor.create({ naziv });
          return res.status(201).json(autor);
      } catch (err) {
@@ -64,6 +67,9 @@ router.post("/", async (req, res) => {
         }
      try {
          const { naziv } = req.body;
+         if(naziv.length < 3) {
+            return res.status(500).json({ error: "Greska", data: err });
+        }
          const [updated] = await Autor.update({ naziv }, {
              where: { id: req.params.id }
          });
