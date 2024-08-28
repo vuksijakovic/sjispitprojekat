@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="sr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Korisnici</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+</head>
+<body><nav class="navbar navbar-expand-lg navbar-light bg-light">
+    <a class="navbar-brand" href="#">Knjiga Sistem</a>
+    <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+        <span class="navbar-toggler-icon"></span>
+    </button>
+    <div class="collapse navbar-collapse" id="navbarNav">
+        <ul class="navbar-nav">
+            <li class="nav-item">
+                <a class="nav-link" href="knjige.html">Knjige</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link admin-menu" href="korisnici.html">Korisnici</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="autori.html">Autori</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="zanrovi.html">Žanrovi</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="narudzbine.html">Narudžbine</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="vrste-knjiga.html">Vrste Knjiga</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="izdavaci.html">Izdavači</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="dodatna-oprema.html">Dodatna Oprema</a>
+            </li><li class="nav-item">
+                <a class="nav-link" href="logout.html">Log out</a>
+            </li>
+        </ul>
+    </div>
+</nav>
+    <div class="container mt-4">
+        <h1 class="mb-4">Korisnici</h1>
+        <a href="novi-korisnik.html" class="btn btn-primary mb-4">Dodaj novog korisnika</a>
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Ime</th>
+                    <th>Email</th>
+                    <th>Uloga</th>
+                    <th>Akcije</th>
+                </tr>
+            </thead>
+            <tbody id="table-body">
+                <!-- Redovi sa korisnicima će biti dinamički ubačeni ovde -->
+            </tbody>
+        </table>
+    </div>
+
+    <script>   if(localStorage.getItem('token')==null) {
+        window.location.href = "index.html";
+    }
+    function parseJwt (token) {
+return JSON.parse(atob(token.split('.')[1]));
+}
+const token = parseJwt(localStorage.getItem('token'));
+if (token.uloga !== "Admin") {
+            // Ako korisnik nije Admin, sakrij stavku u navbaru
+            const navbarItem = document.querySelector(`.admin-menu`);
+            if (navbarItem) {
+                navbarItem.style.display = 'none';
+            }
+        }
+if(token.uloga!=="Admin") {
+    window.location.href = "knjige.html";
+}
+function isTokenExpired(token) {
+try {
+    
+    const currentTime = Math.floor(Date.now() / 1000); // Current time in seconds
+    
+    return token.exp < currentTime;
+} catch (error) {
+    return true; 
+}
+}
+
+// Example usage:
+const expired = isTokenExpired(token);
+if(expired == true) {
+localStorage.clear('token');
+window.location.href = 'index.html';
+}
+        async function fetchUsers() {
+            try {
+                const response = await fetch('http://localhost:9000/korisnik');
+                const users = await response.json();
+                const tableBody = document.getElementById('table-body');
+                tableBody.innerHTML = '';
+
+                users.forEach(user => {
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                        <td>${user.id}</td>
+                        <td>${user.ime}</td>
+                        <td>${user.email}</td>
+                        <td>${user.uloga}</td>
+                        <td>
+                            <a href="korisnik.html?id=${user.id}" class="btn btn-primary btn-sm">Izmeni</a>
+                            <button class="btn btn-danger btn-sm" onclick="deleteUser(${user.id})">Izbriši</button>
+                        </td>
+                    `;
+                    tableBody.appendChild(row);
+                });
+            } catch (error) {
+                console.error('Greška prilikom preuzimanja korisnika:', error);
+            }
+        }
+
+        async function deleteUser(id) {
+            try {
+                await fetch(`http://localhost:9000/korisnik/${id}`, { method: 'DELETE' });
+                fetchUsers(); // Osvježi listu
+            } catch (error) {
+                console.error('Greška prilikom brisanja korisnika:', error);
+            }
+        }
+
+        fetchUsers(); // Početno preuzimanje
+    </script>
+</body>
+</html>

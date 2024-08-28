@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="sr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Narudžbine</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <script defer src="script.js"></script> <!-- Link to your JavaScript file -->
+</head>
+<body><nav class="navbar navbar-expand-lg navbar-light bg-light">
+    <a class="navbar-brand" href="#">Knjiga Sistem</a>
+    <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+        <span class="navbar-toggler-icon"></span>
+    </button>
+    <div class="collapse navbar-collapse" id="navbarNav">
+        <ul class="navbar-nav">
+            <li class="nav-item">
+                <a class="nav-link" href="knjige.html">Knjige</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link admin-menu" href="korisnici.html">Korisnici</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="autori.html">Autori</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="zanrovi.html">Žanrovi</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="narudzbine.html">Narudžbine</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="vrste-knjiga.html">Vrste Knjiga</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="izdavaci.html">Izdavači</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="dodatna-oprema.html">Dodatna Oprema</a>
+            </li><li class="nav-item">
+                <a class="nav-link" href="logout.html">Log out</a>
+            </li>
+        </ul>
+    </div>
+</nav>
+    <div class="container mt-4">
+        <h1 class="mb-4">Narudžbine</h1>
+        
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Korisnik</th>
+                    <th>Knjiga</th>
+                    <th>Dodatna oprema</th>
+                    <th>Akcije</th>
+                </tr>
+            </thead>
+            <tbody id="table-body">
+                <!-- Redovi sa narudžbinama će biti dinamički ubačeni ovde -->
+            </tbody>
+        </table>
+    </div>
+
+    <script>   if(localStorage.getItem('token')==null) {
+        window.location.href = "index.html";
+    }
+    function parseJwt (token) {
+return JSON.parse(atob(token.split('.')[1]));
+}
+const token = parseJwt(localStorage.getItem('token'));
+if (token.uloga !== "Admin") {
+            // Ako korisnik nije Admin, sakrij stavku u navbaru
+            const navbarItem = document.querySelector(`.admin-menu`);
+            if (navbarItem) {
+                navbarItem.style.display = 'none';
+            }
+        }
+function isTokenExpired(token) {
+try {
+    
+    const currentTime = Math.floor(Date.now() / 1000); // Current time in seconds
+    
+    return token.exp < currentTime;
+} catch (error) {
+    return true; 
+}
+}
+
+// Example usage:
+const expired = isTokenExpired(token);
+if(expired == true) {
+localStorage.clear('token');
+window.location.href = 'index.html';
+}
+var korisnici = new Array(100);
+var knjige = new Array(100);
+var oprema = new Array(100);
+        async function fetchKorisnici() {
+            const response = await fetch('http://localhost:9000/korisnik');
+            const users = await response.json();
+            users.forEach(user => {
+                korisnici[user.id] = korisnici.naziv;
+            });
+        }
+        async function fetchOrders() {
+            try {
+                const response = await fetch('http://localhost:9000/narudzbina');
+                const orders = await response.json();
+                const tableBody = document.getElementById('table-body');
+                tableBody.innerHTML = '';
+
+                for(const order of orders) {
+                    const row = document.createElement('tr');
+                    const korisnik = await fetchUserName(order.korisnik_id);
+                    var oprema = "Nema dodatne opreme";
+                    if(order.dodatna_oprema_id) {
+                        oprema = await fetchOpremaName(order.dodatna_oprema_id);
+                    }
+                    const knjiga = await fetchKnjigaName(order.knjiga_id);
+
+                    row.innerHTML = `
+                        <td>${order.id}</td>
+                        <td>${korisnik}</td>
+                        <td>${knjiga}</td>
+                        <td>${oprema}</td>
+                        <td>
+                           
+                            <button class="btn btn-danger btn-sm" onclick="deleteOrder(${order.id})">Izbriši</button>
+                        </td>
+                    `;
+                    tableBody.appendChild(row);
+                };
+            } catch (error) {
+                console.error('Greška prilikom preuzimanja narudžbina:', error);
+            }
+        }
+
+        async function deleteOrder(id) {
+            try {
+                await fetch(`http://localhost:9000/narudzbina/${id}`, { method: 'DELETE' });
+                fetchOrders(); // Osvježi listu
+            } catch (error) {
+                console.error('Greška prilikom brisanja narudžbine:', error);
+            }
+        }
+        async function fetchUserName(autor_id) {
+    try {
+        const response = await fetch(`http://localhost:9000/korisnik/${autor_id}`);
+        if (!response.ok) {
+            throw new Error('Network response was not ok');
+        }
+        const author = await response.json();
+        return author.ime; // Assuming 'naziv' is the field for the author's name
+    } catch (error) {
+        console.error('Failed to fetch author:', error);
+        return null;
+    }
+}
+async function fetchOpremaName(autor_id) {
+    try {
+        const response = await fetch(`http://localhost:9000/oprema/${autor_id}`);
+        if (!response.ok) {
+            throw new Error('Network response was not ok');
+        }
+        const author = await response.json();
+        return author.naziv; // Assuming 'naziv' is the field for the author's name
+    } catch (error) {
+        console.error('Failed to fetch author:', error);
+        return null;
+    }
+}
+async function fetchKnjigaName(autor_id) {
+    try {
+        const response = await fetch(`http://localhost:9000/knjiga/${autor_id}`);
+        if (!response.ok) {
+            throw new Error('Network response was not ok');
+        }
+        const author = await response.json();
+        return author.naziv; // Assuming 'naziv' is the field for the author's name
+    } catch (error) {
+        console.error('Failed to fetch author:', error);
+        return null;
+    }
+}
+    fetchOrders();
+
+    </script>
+</body>
+</html>
