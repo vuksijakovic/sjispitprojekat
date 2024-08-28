@@ -1,64 +1,59 @@
 const express = require('express');
 const router = express.Router();
-const { Narudzbina, Korisnik, Knjiga, Dodatna_oprema } = require('../models'); // Adjust the path if necessary
+const { Vrsta_knjige } = require('../models'); // Adjust the path if necessary
 router.use(express.json());
 router.use(express.urlencoded({ extended: true }));
-// Create a new Narudzbina
+// Create a new Vrsta_knjige
 router.post("/", async (req, res) => {
     const authHeader = req.headers.authorization;
         if (!authHeader || !authHeader.startsWith('Bearer ')) {
             return res.status(401).json({ error: "Unauthorized" });
         }
         var token = JSON.parse(atob(authHeader.split('.')[1]));
-        if(token.uloga !=="Admin" && token.uloga !=="Moderator" && token.uloga!=="Korisnik"
+        if(token.uloga !=="Admin" && token.uloga !=="Moderator"
         ) {
             return res.status(401).json({ error: "Unauthorized" });
 
         }
     try {
-        const { korisnik_id, knjiga_id, dodatna_oprema_id } = req.body;
-        if(!Number.isInteger(korisnik_id) || !Number.isInteger(knjiga_id) || !Number.isInteger(dodatna_oprema_id)) {
-            res.status(500).json({ error: "Greska", data: err });
-
+        const { naziv } = req.body;
+        if(naziv.length < 3) {
+            return res.status(500).json({ error: "Greska", data: err });
         }
-        const narudzbina = await Narudzbina.create({ korisnik_id, knjiga_id, dodatna_oprema_id });
-        return res.status(201).json(narudzbina);
+        const vrstaKnjige = await Vrsta_knjige.create({ naziv });
+        return res.status(201).json(vrstaKnjige);
     } catch (err) {
         console.log(err);
         res.status(500).json({ error: "Greska", data: err });
     }
 });
 
-// Get all Narudzbina entries
+// Get all Vrsta_knjige entries
 router.get("/", async (req, res) => {
     try {
-        const narudzbine = await Narudzbina.findAll({
-            include: [Korisnik, Knjiga, Dodatna_oprema]
-        });
-        return res.json(narudzbine);
+        const vrsteKnjige = await Vrsta_knjige.findAll();
+        return res.json(vrsteKnjige);
     } catch (err) {
         console.log(err);
         res.status(500).json({ error: "Greska", data: err });
     }
 });
 
-// Get a single Narudzbina by ID
+// Get a single Vrsta_knjige by ID
 router.get("/:id", async (req, res) => {
     try {
-        const narudzbina = await Narudzbina.findByPk(req.params.id, {
-            include: [Korisnik, Knjiga, Dodatna_oprema]
-        });
-        if (!narudzbina) {
-            return res.status(404).json({ error: "Narudzbina not found" });
+        const vrstaKnjige = await Vrsta_knjige.findByPk(req.params.id);
+        if (!vrstaKnjige) {
+            return res.status(404).json({ error: "Vrsta_knjige not found" });
         }
-        return res.json(narudzbina);
+        return res.json(vrstaKnjige);
     } catch (err) {
         console.log(err);
         res.status(500).json({ error: "Greska", data: err });
     }
 });
 
-// Update a Narudzbina by ID
+// Update a Vrsta_knjige by ID
 router.put("/:id", async (req, res) => {
     const authHeader = req.headers.authorization;
         if (!authHeader || !authHeader.startsWith('Bearer ')) {
@@ -71,29 +66,26 @@ router.put("/:id", async (req, res) => {
 
         }
     try {
-        const { korisnik_id, knjiga_id, dodatna_oprema_id } = req.body;
-        if(!Number.isInteger(korisnik_id) || !Number.isInteger(knjiga_id) || !Number.isInteger(dodatna_oprema_id)) {
-            res.status(500).json({ error: "Greska", data: err });
-
+        const { naziv } = req.body;
+        if(naziv.length < 3) {
+            return res.status(500).json({ error: "Greska", data: err });
         }
-        const [updated] = await Narudzbina.update(
-            { korisnik_id, knjiga_id, dodatna_oprema_id },
+        const [updated] = await Vrsta_knjige.update(
+            { naziv },
             { where: { id: req.params.id } }
         );
         if (updated) {
-            const updatedNarudzbina = await Narudzbina.findByPk(req.params.id, {
-                include: [Korisnik, Knjiga, Dodatna_oprema]
-            });
-            return res.json(updatedNarudzbina);
+            const updatedVrstaKnjige = await Vrsta_knjige.findByPk(req.params.id);
+            return res.json(updatedVrstaKnjige);
         }
-        return res.status(404).json({ error: "Narudzbina not found" });
+        return res.status(404).json({ error: "Vrsta_knjige not found" });
     } catch (err) {
         console.log(err);
         res.status(500).json({ error: "Greska", data: err });
     }
 });
 
-// Delete a Narudzbina by ID
+// Delete a Vrsta_knjige by ID
 router.delete("/:id", async (req, res) => {
     const authHeader = req.headers.authorization;
         if (!authHeader || !authHeader.startsWith('Bearer ')) {
@@ -106,13 +98,13 @@ router.delete("/:id", async (req, res) => {
 
         }
     try {
-        const deleted = await Narudzbina.destroy({
+        const deleted = await Vrsta_knjige.destroy({
             where: { id: req.params.id }
         });
         if (deleted) {
             return res.status(204).json(); // No content to return
         }
-        return res.status(404).json({ error: "Narudzbina not found" });
+        return res.status(404).json({ error: "Vrsta_knjige not found" });
     } catch (err) {
         console.log(err);
         res.status(500).json({ error: "Greska", data: err });
